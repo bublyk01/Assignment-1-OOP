@@ -1,9 +1,9 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\Volodya\\Desktop\\Assignment1\\",
+  "WorkspaceRootPath": "C:\\Users\\Volodya\\Desktop\\Assignment-1-OOP\\Assignment1\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{C7D79F76-2B44-4760-BABD-F3FF8E4A56D9}|Assignment1.vcxproj|C:\\Users\\Volodya\\Desktop\\Assignment1\\Assignment1.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "AbsoluteMoniker": "D:0:0:{C7D79F76-2B44-4760-BABD-F3FF8E4A56D9}|Assignment1.vcxproj|C:\\Users\\Volodya\\Desktop\\Assignment-1-OOP\\Assignment1\\Assignment1.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{C7D79F76-2B44-4760-BABD-F3FF8E4A56D9}|Assignment1.vcxproj|solutionrelative:Assignment1.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
@@ -20,11 +20,11 @@
               "$type": "Document",
               "DocumentIndex": 0,
               "Title": "Assignment1.cpp",
-              "DocumentMoniker": "C:\\Users\\Volodya\\Desktop\\Assignment1\\Assignment1.cpp",
+              "DocumentMoniker": "C:\\Users\\Volodya\\Desktop\\Assignment-1-OOP\\Assignment1\\Assignment1.cpp",
               "RelativeDocumentMoniker": "Assignment1.cpp",
-              "ToolTip": "C:\\Users\\Volodya\\Desktop\\Assignment1\\Assignment1.cpp",
+              "ToolTip": "C:\\Users\\Volodya\\Desktop\\Assignment-1-OOP\\Assignment1\\Assignment1.cpp",
               "RelativeToolTip": "Assignment1.cpp",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2024-09-11T08:08:54.484Z",
               "EditorCaption": ""
