@@ -98,6 +98,8 @@ public:
     std::string viewTicketDetails(const std::string& confirmationID, const std::vector<Airplane>& airplanes);
 
     std::string viewTickets(const std::string& username);
+
+    std::string viewFlightTickets(const std::string& flightNumber, const std::string& flightDate);
 };
 
 std::vector<Airplane> Reader::readConfig(const std::string& filename) {
@@ -194,6 +196,19 @@ std::string Reader::viewTickets(const std::string& username) {
     return result;
 }
 
+std::string Reader::viewFlightTickets(const std::string& flightNumber, const std::string& flightDate) {
+    std::string result;
+    for (const auto& ticket : tickets) {
+        if (ticket.getFlightNumber() == flightNumber && ticket.getFlightDate() == flightDate) {
+            result += ticket.getTicketInfo() + "\n";
+        }
+    }
+    if (result.empty()) {
+        return "No tickets booked for this flight.";
+    }
+    return result;
+}
+
 int main() {
     Reader reader;
     std::string FilePath = "config.txt";
@@ -204,7 +219,8 @@ int main() {
     std::cout << "3. Type 'return' to return the ticket" << "\n";
     std::cout << "4. Type 'view' to view the booking information" << "\n";
     std::cout << "5. Type 'viewuser' to view all tickets booked by a user" << "\n";
-    std::cout << "6. Type 'exit' to exit" << "\n";
+    std::cout << "6. Type 'viewflight' to view all of the booked tickets for a particular flight" << "\n";
+    std::cout << "7. Type 'exit' to exit" << "\n";
 
     std::string command;
 
@@ -227,10 +243,8 @@ int main() {
                     std::cout << "Available Seats: " << airplane.getAvailableSeats() << "\n";
                     std::cout << "Seat Prices: " << airplane.getSeatPrice() << "\n";
                     found = true;
-                    break;
                 }
             }
-
             if (!found) {
                 std::cout << "Flight not found" << "\n";
             }
@@ -269,11 +283,18 @@ int main() {
 
             std::cout << reader.viewTickets(username) << "\n";
         }
-        else if (command == "exit") {
-            break;
+        else if (command == "viewflight") {
+            std::string FlightNumber, FlightDate;
+            std::cout << "Enter the flight number: ";
+            std::cin >> FlightNumber;
+            std::cout << "Enter the flight date: ";
+            std::cin >> FlightDate;
+
+            std::cout << reader.viewFlightTickets(FlightNumber, FlightDate) << "\n";
         }
-        else {
-            std::cout << "Wrong command" << "\n";
+        else if (command == "exit") {
+            std::cout << "Exiting...";
+            break;
         }
     }
 
