@@ -79,6 +79,7 @@ public:
     std::string getFlightDate() const { return FlightDate; }
     std::string getSeatNumber() const { return SeatNumber; }
     std::string getConfirmationID() const { return ConfirmationID; }
+    std::string getName() const { return Name; }
 
     friend class Reader;
 };
@@ -95,6 +96,8 @@ public:
     bool returnTicket(const std::string& confirmationID, std::vector<Airplane>& airplanes);
 
     std::string viewTicketDetails(const std::string& confirmationID, const std::vector<Airplane>& airplanes);
+
+    std::string viewTickets(const std::string& username);
 };
 
 std::vector<Airplane> Reader::readConfig(const std::string& filename) {
@@ -178,6 +181,19 @@ std::string Reader::viewTicketDetails(const std::string& confirmationID, const s
     return "This ticket was not found";
 }
 
+std::string Reader::viewTickets(const std::string& username) {
+    std::string result;
+    for (const auto& ticket : tickets) {
+        if (ticket.getName() == username) {
+            result += ticket.getTicketInfo() + "\n";
+        }
+    }
+    if (result.empty()) {
+        return "This person did not book any tickets";
+    }
+    return result;
+}
+
 int main() {
     Reader reader;
     std::string FilePath = "config.txt";
@@ -187,7 +203,8 @@ int main() {
     std::cout << "2. Type 'book' to buy the ticket" << "\n";
     std::cout << "3. Type 'return' to return the ticket" << "\n";
     std::cout << "4. Type 'view' to view the booking information" << "\n";
-    std::cout << "5. Type 'exit' to exit" << "\n";
+    std::cout << "5. Type 'viewuser' to view all tickets booked by a user" << "\n";
+    std::cout << "6. Type 'exit' to exit" << "\n";
 
     std::string command;
 
@@ -244,6 +261,13 @@ int main() {
             std::cin >> confirmationID;
 
             std::cout << reader.viewTicketDetails(confirmationID, airplanes) << "\n";
+        }
+        else if (command == "viewuser") {
+            std::string username;
+            std::cout << "Enter the name: ";
+            std::cin >> username;
+
+            std::cout << reader.viewTickets(username) << "\n";
         }
         else if (command == "exit") {
             break;
