@@ -34,6 +34,14 @@ public:
         return false;
     }
 
+    bool cancelSeat(const std::string& seat) {
+        if (seats.find(seat) != seats.end() && seats[seat]) {
+            seats[seat] = false;
+            return true;
+        }
+        return false;
+    }
+
     std::string getAvailableSeats() const {
         std::string availableSeats;
         for (const auto& seat : seats) {
@@ -77,6 +85,8 @@ public:
     std::vector<Airplane> readConfig(const std::string& filename);
 
     bool bookSeat(const std::string& date, const std::string& flightNo, const std::string& seat, const std::string& username, std::vector<Airplane>& airplanes);
+
+    bool returnTicket(const std::string& confirmationID, std::vector<Airplane>& airplanes);
 };
 
 std::vector<Airplane> Reader::readConfig(const std::string& filename) {
@@ -126,6 +136,24 @@ bool Reader::bookSeat(const std::string& date, const std::string& flightNo, cons
     return false;
 }
 
+bool Reader::returnTicket(const std::string& confirmationID, std::vector<Airplane>& airplanes) {
+    for (auto it = tickets.begin(); it != tickets.end(); ++it) {
+        if (it->ConfirmationID == confirmationID) {
+            for (auto& airplane : airplanes) {
+                if (airplane.getFlightNumber() == it->FlightNumber && airplane.getFlightDate() == airplane.getFlightDate()) {
+                    if (airplane.cancelSeat(it->SeatNumber)) {
+                        std::cout << "Ticket is returned. Price of this seat: " << airplane.getSeatPrice() << "\n";
+                        tickets.erase(it);
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    std::cout << "This ticket was not found";
+    return false;
+}
+
 int main() {
     Reader reader;
     std::string FilePath = "config.txt";
@@ -133,7 +161,8 @@ int main() {
 
     std::cout << "1. Type 'check' to see available seats" << "\n";
     std::cout << "2. Type 'book' to buy the ticket" << "\n";
-    std::cout << "3. Type 'exit' to exit" << "\n";
+    std::cout << "3. Type 'return' to return the ticket" << "\n";
+    std::cout << "4. Type 'exit' to exit" << "\n";
 
     std::string command;
 
@@ -176,6 +205,13 @@ int main() {
             std::cin >> Username;
 
             reader.bookSeat(FlightDate, FlightNo, Seat, Username, airplanes);
+        }
+        else if (command == "return") {
+            std::string confirmationID;
+            std::cout << "Enter your ID: ";
+            std::cin >> confirmationID;
+
+            reader.returnTicket(confirmationID, airplanes);
         }
         else if (command == "exit") {
             break;
