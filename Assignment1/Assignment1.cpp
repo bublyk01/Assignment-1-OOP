@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <algorithm>
 
 class Airplane {
 private:
@@ -125,4 +126,42 @@ int main() {
 	Reader reader;
 	std::string FilePath = "config.txt";
 	std::vector<Airplane> airplanes = reader.readConfig(FilePath);
+
+	std::cout << "1. Type 'check' to see available seats" << "\n";
+	std::cout << "2. Type 'book' to buy the ticket" << "\n";
+	std::cout << "3. Type 'return' to return the ticket" << "\n";
+	std::cout << "4. Type 'view' to view the booking information" << "\n";
+	std::cout << "5. Type 'view username' with your name to view information in more detail" << "\n";
+	std::cout << "6. Type 'view flight' to view all of the booked tickets for a particular flight" << "\n";
+	std::cout << "7. Type 'exit' to exit" << "\n";
+
+	std::string command;
+
+	while (true) {
+		std::cout << "Type your choice: ";
+		std::cin >> command;
+
+		std::transform(command.begin(), command.end(), command.begin(), ::tolower);
+
+		if (command == "check") {
+			std::string FlightNumber, FlightDate;
+			std::cout << "Enter the flight number: ";
+			std::cin >> FlightNumber;
+			std::cout << "Enter the date: ";
+			std::cin >> FlightDate;
+			
+			bool found = false;
+			for (const auto& airplane : airplanes) {
+				if (reader.getFlightNumber(airplane) == FlightNumber && reader.getFlightDate(airplane) == FlightDate) {
+					std::cout << "Available seats: " << reader.getAvailableSeat(airplane);
+					found = true;
+					break;
+				}
+				if (!found) {
+					std::cout << "Flight not found";
+				}
+			}
+		}
+
+	}
 }
