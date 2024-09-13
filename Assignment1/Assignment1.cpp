@@ -64,15 +64,21 @@ private:
     std::string Name;
     std::string SeatNumber;
     std::string FlightNumber;
+    std::string FlightDate;
     std::string ConfirmationID;
 
 public:
-    Ticket(std::string name, std::string seat, std::string flight, std::string confirmationID)
-        : Name(name), SeatNumber(seat), FlightNumber(flight), ConfirmationID(confirmationID) {}
+    Ticket(std::string name, std::string seat, std::string flight, std::string date, std::string confirmationID)
+        : Name(name), SeatNumber(seat), FlightNumber(flight), FlightDate(date), ConfirmationID(confirmationID) {}
 
     std::string getTicketInfo() const {
         return "Name: " + Name + ", Seat: " + SeatNumber + ", Flight: " + FlightNumber + ", Confirmation ID: " + ConfirmationID;
     }
+
+    std::string getFlightNumber() const { return FlightNumber; }
+    std::string getFlightDate() const { return FlightDate; }
+    std::string getSeatNumber() const { return SeatNumber; }
+    std::string getConfirmationID() const { return ConfirmationID; }
 
     friend class Reader;
 };
@@ -87,6 +93,8 @@ public:
     bool bookSeat(const std::string& date, const std::string& flightNo, const std::string& seat, const std::string& username, std::vector<Airplane>& airplanes);
 
     bool returnTicket(const std::string& confirmationID, std::vector<Airplane>& airplanes);
+
+    std::string viewTicketDetails(const std::string& confirmationID, const std::vector<Airplane>& airplanes);
 };
 
 std::vector<Airplane> Reader::readConfig(const std::string& filename) {
@@ -122,7 +130,7 @@ bool Reader::bookSeat(const std::string& date, const std::string& flightNo, cons
         if (airplane.getFlightNumber() == flightNo && airplane.getFlightDate() == date) {
             if (airplane.bookSeat(seat)) {
                 std::string confirmationID = "ID" + std::to_string(tickets.size() + 1);
-                tickets.emplace_back(username, seat, flightNo, confirmationID);
+                tickets.emplace_back(username, seat, flightNo, date, confirmationID);
                 std::cout << "Success! " << confirmationID << "\n";
                 return true;
             }
@@ -154,6 +162,22 @@ bool Reader::returnTicket(const std::string& confirmationID, std::vector<Airplan
     return false;
 }
 
+std::string Reader::viewTicketDetails(const std::string& confirmationID, const std::vector<Airplane>& airplanes) {
+    for (const auto& ticket : tickets) {
+        if (ticket.getConfirmationID() == confirmationID) {
+            for (const auto& airplane : airplanes) {
+                if (airplane.getFlightNumber() == ticket.getFlightNumber() && airplane.getFlightDate() == ticket.getFlightDate()) {
+                    return "Flight Number: " + ticket.getFlightNumber() +
+                        ", Flight Date: " + ticket.getFlightDate() +
+                        ", Seat Number: " + ticket.getSeatNumber() +
+                        ", Seat Price: " + airplane.getSeatPrice();
+                }
+            }
+        }
+    }
+    return "This ticket was not found";
+}
+
 int main() {
     Reader reader;
     std::string FilePath = "config.txt";
@@ -162,7 +186,8 @@ int main() {
     std::cout << "1. Type 'check' to see available seats" << "\n";
     std::cout << "2. Type 'book' to buy the ticket" << "\n";
     std::cout << "3. Type 'return' to return the ticket" << "\n";
-    std::cout << "4. Type 'exit' to exit" << "\n";
+    std::cout << "4. Type 'view' to view the booking information" << "\n";
+    std::cout << "5. Type 'exit' to exit" << "\n";
 
     std::string command;
 
@@ -212,6 +237,13 @@ int main() {
             std::cin >> confirmationID;
 
             reader.returnTicket(confirmationID, airplanes);
+        }
+        else if (command == "view") {
+            std::string confirmationID;
+            std::cout << "Enter the ID: ";
+            std::cin >> confirmationID;
+
+            std::cout << reader.viewTicketDetails(confirmationID, airplanes) << "\n";
         }
         else if (command == "exit") {
             break;
