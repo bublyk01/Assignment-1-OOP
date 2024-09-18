@@ -3,27 +3,31 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include <algorithm>
-#include <unordered_map>
+#include <map>
 
 class Airplane {
 private:
-    std::unordered_map<std::string, bool> seats;
+    std::map<std::string, bool> seats;
+    std::map<int, int> seatPrices;
     std::string FlightDate;
     std::string FlightNumber;
-    std::string SeatPrice;
+    int SeatsPerRow;
 
 public:
-    Airplane(std::string seatCount, std::string date, std::string number, std::string price)
-        : FlightDate(date), FlightNumber(number), SeatPrice(price) {
-        int numSeats = std::stoi(seatCount);
-        for (int i = 1; i <= numSeats; ++i) {
-            seats[std::to_string(i)] = false;
+    Airplane(int seatsPerRow, const std::string& date, const std::string& number, const std::map<int, int>& prices)
+        : SeatsPerRow(seatsPerRow), FlightDate(date), FlightNumber(number), seatPrices(prices) {
+
+        int rows = seatPrices.rbegin()->first;
+        for (int i = 1; i <= rows; ++i) {
+            for (char j = 'A'; j < 'A' + seatsPerRow; ++j) {
+                std::string seat = std::to_string(i) + j;
+                seats[seat] = false;
+            }
         }
     }
 
-    bool isSeatAvailable(const std::string& seat) {
-        return seats.find(seat) != seats.end() && !seats[seat];
+    bool isSeatAvailable(const std::string& seat) const {
+        return seats.find(seat) != seats.end() && !seats.at(seat);
     }
 
     bool bookSeat(const std::string& seat) {
@@ -49,15 +53,25 @@ public:
                 availableSeats += seat.first + " ";
             }
         }
-        return availableSeats;
+        return availableSeats.empty() ? "No available seats" : availableSeats;
+    }
+
+    int getSeatPrice(const std::string& seat) const {
+        int row = std::stoi(seat.substr(0, seat.size() - 1));
+        for (const auto& priceRange : seatPrices) {
+            if (row <= priceRange.first) {
+                return priceRange.second;
+            }
+        }
+        return 0;
     }
 
     std::string getFlightDate() const { return FlightDate; }
     std::string getFlightNumber() const { return FlightNumber; }
-    std::string getSeatPrice() const { return SeatPrice; }
 
     friend class Reader;
 };
+
 
 class Ticket {
 private:
@@ -68,7 +82,7 @@ private:
     std::string ConfirmationID;
 
 public:
-    Ticket(std::string name, std::string seat, std::string flight, std::string date, std::string confirmationID)
+    Ticket(const std::string& name, const std::string& seat, const std::string& flight, const std::string& date, const std::string& confirmationID)
         : Name(name), SeatNumber(seat), FlightNumber(flight), FlightDate(date), ConfirmationID(confirmationID) {}
 
     std::string getTicketInfo() const {
@@ -114,16 +128,25 @@ std::vector<Airplane> Reader::readConfig(const std::string& filename) {
     std::string line;
     while (std::getline(file, line)) {
         std::istringstream iss(line);
-        std::string flightDate, flightNumber, seatRows, firstPrice, secondPrice;
-        iss >> flightDate >> flightNumber >> seatRows >> firstPrice >> secondPrice;
+        std::string flightDate, flightNumber;
+        int seatsPerRow;
+        std::map<int, int> seatPrices;
+        iss >> flightDate >> flightNumber >> seatsPerRow;
 
-        firstPrice.pop_back();
-        secondPrice.pop_back();
+        std::string priceRange;
+        while (iss >> priceRange) {
+            size_t hyphenPos = priceRange.find('-');
+            size_t spacePos = priceRange.find(' ', hyphenPos);
+            size_t dollarPos = priceRange.find('$', spacePos);
+            
+            int rowNumber = std::stoi(priceRange.substr(0, hyphenPos));
+            int price = std::stoi(priceRange.substr(spacePos + 1, dollarPos - spacePos - 1));
 
-        std::string seatPrice = firstPrice + " " + secondPrice;
+            seatPrices[rowNumber] = price;
+        }
 
-        Airplane airplane(seatRows, flightDate, flightNumber, seatPrice);
-        airplanes.push_back(airplane);
+
+        airplanes.emplace_back(seatsPerRow, flightDate, flightNumber, seatPrices);
     }
 
     file.close();
@@ -151,11 +174,11 @@ bool Reader::bookSeat(const std::string& date, const std::string& flightNo, cons
 
 bool Reader::returnTicket(const std::string& confirmationID, std::vector<Airplane>& airplanes) {
     for (auto it = tickets.begin(); it != tickets.end(); ++it) {
-        if (it->ConfirmationID == confirmationID) {
+        if (it->getConfirmationID() == confirmationID) {
             for (auto& airplane : airplanes) {
-                if (airplane.getFlightNumber() == it->FlightNumber && airplane.getFlightDate() == airplane.getFlightDate()) {
-                    if (airplane.cancelSeat(it->SeatNumber)) {
-                        std::cout << "Ticket is returned. Price of this seat: " << airplane.getSeatPrice() << "\n";
+                if (airplane.getFlightNumber() == it->getFlightNumber() && airplane.getFlightDate() == it->getFlightDate()) {
+                    if (airplane.cancelSeat(it->getSeatNumber())) {
+                        std::cout << "Ticket is returned. Price of this seat: " << airplane.getSeatPrice(it->getSeatNumber()) << "\n";
                         tickets.erase(it);
                         return true;
                     }
@@ -175,7 +198,7 @@ std::string Reader::viewTicketDetails(const std::string& confirmationID, const s
                     return "Flight Number: " + ticket.getFlightNumber() +
                         ", Flight Date: " + ticket.getFlightDate() +
                         ", Seat Number: " + ticket.getSeatNumber() +
-                        ", Seat Price: " + airplane.getSeatPrice();
+                        ", Seat Price: " + std::to_string(airplane.getSeatPrice(ticket.getSeatNumber()));
                 }
             }
         }
@@ -190,10 +213,7 @@ std::string Reader::viewTickets(const std::string& username) {
             result += ticket.getTicketInfo() + "\n";
         }
     }
-    if (result.empty()) {
-        return "This person did not book any tickets";
-    }
-    return result;
+    return result.empty() ? "This person did not book any tickets" : result;
 }
 
 std::string Reader::viewFlightTickets(const std::string& flightNumber, const std::string& flightDate) {
@@ -203,10 +223,7 @@ std::string Reader::viewFlightTickets(const std::string& flightNumber, const std
             result += ticket.getTicketInfo() + "\n";
         }
     }
-    if (result.empty()) {
-        return "No tickets booked for this flight.";
-    }
-    return result;
+    return result.empty() ? "No tickets booked for this flight." : result;
 }
 
 int main() {
@@ -223,26 +240,22 @@ int main() {
     std::cout << "7. Type 'exit' to exit" << "\n";
 
     std::string command;
-
     while (true) {
-        std::cout << "Type your choice: ";
         std::cin >> command;
 
-        std::transform(command.begin(), command.end(), command.begin(), ::tolower);
-
         if (command == "check") {
-            std::string FlightNumber, FlightDate;
+            std::string flightNo, date;
             std::cout << "Enter the flight number: ";
-            std::cin >> FlightNumber;
+            std::cin >> flightNo;
             std::cout << "Enter the flight date: ";
-            std::cin >> FlightDate;
+            std::cin >> date;
 
             bool found = false;
             for (const auto& airplane : airplanes) {
-                if (airplane.getFlightNumber() == FlightNumber && airplane.getFlightDate() == FlightDate) {
-                    std::cout << "Available Seats: " << airplane.getAvailableSeats() << "\n";
-                    std::cout << "Seat Prices: " << airplane.getSeatPrice() << "\n";
+                if (airplane.getFlightNumber() == flightNo && airplane.getFlightDate() == date) {
+                    std::cout << "Available seats: " << airplane.getAvailableSeats() << "\n";
                     found = true;
+                    break;
                 }
             }
             if (!found) {
@@ -250,17 +263,17 @@ int main() {
             }
         }
         else if (command == "book") {
-            std::string FlightDate, FlightNo, Seat, Username;
+            std::string flightNo, date, seat, username;
             std::cout << "Enter the flight date: ";
-            std::cin >> FlightDate;
+            std::cin >> date;
             std::cout << "Enter the flight number: ";
-            std::cin >> FlightNo;
+            std::cin >> flightNo;
             std::cout << "Type a seat number you want to book: ";
-            std::cin >> Seat;
+            std::cin >> seat;
             std::cout << "Enter your name: ";
-            std::cin >> Username;
+            std::cin >> username;
 
-            reader.bookSeat(FlightDate, FlightNo, Seat, Username, airplanes);
+            reader.bookSeat(date, flightNo, seat, username, airplanes);
         }
         else if (command == "return") {
             std::string confirmationID;
@@ -284,16 +297,15 @@ int main() {
             std::cout << reader.viewTickets(username) << "\n";
         }
         else if (command == "viewflight") {
-            std::string FlightNumber, FlightDate;
+            std::string flightNo, date;
             std::cout << "Enter the flight number: ";
-            std::cin >> FlightNumber;
+            std::cin >> flightNo;
             std::cout << "Enter the flight date: ";
-            std::cin >> FlightDate;
+            std::cin >> date;
 
-            std::cout << reader.viewFlightTickets(FlightNumber, FlightDate) << "\n";
+            std::cout << reader.viewFlightTickets(flightNo, date) << "\n";
         }
         else if (command == "exit") {
-            std::cout << "Exiting...";
             break;
         }
     }
