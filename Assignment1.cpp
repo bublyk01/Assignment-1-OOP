@@ -133,18 +133,18 @@ std::vector<Airplane> Reader::readConfig(const std::string& filename) {
         std::map<int, int> seatPrices;
         iss >> flightDate >> flightNumber >> seatsPerRow;
 
-        std::string priceRange;
-        while (iss >> priceRange) {
-            size_t hyphenPos = priceRange.find('-');
-            size_t spacePos = priceRange.find(' ', hyphenPos);
-            size_t dollarPos = priceRange.find('$', spacePos);
-            
-            int rowNumber = std::stoi(priceRange.substr(0, hyphenPos));
-            int price = std::stoi(priceRange.substr(spacePos + 1, dollarPos - spacePos - 1));
-
-            seatPrices[rowNumber] = price;
+        std::string range;
+        while (iss >> range) {
+            std::string priceStr;
+            iss >> priceStr;
+            size_t hyphenPos = range.find('-');
+            int startRow = std::stoi(range.substr(0, hyphenPos));
+            int endRow = std::stoi(range.substr(hyphenPos + 1));
+            int price = std::stoi(priceStr.substr(0, priceStr.size() - 1));
+            for (int row = startRow; row <= endRow; ++row) {
+                seatPrices[row] = price;
+            }
         }
-
 
         airplanes.emplace_back(seatsPerRow, flightDate, flightNumber, seatPrices);
     }
